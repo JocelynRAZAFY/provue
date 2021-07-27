@@ -1,30 +1,49 @@
 <template>
-  <div id="nav">
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
+  <div id="app-page">
+    <router-view></router-view>
   </div>
-  <router-view/>
+
 </template>
 
-<style lang="scss">
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
+<script>
+  import axios from "axios";
+  import {mapMutations,mapState} from "vuex"
+  import {getToken} from "./plugins/auth";
+  export default {
+    name: "App",
+    data(){
+      return {
+        connexion: null
+      }
+    },
+    computed:{
+      ...mapState({
+        token: (state) => state.user.token
+      })
+    },
+    created() {
+      axios.interceptors.response.use(undefined, (err) => {
+        return new Promise(() => {
+          if (err.response.status === 401) {
+            this.$notify({
+              title: 'Login',
+              message: 'Email ou mot de passe incorrect',
+              type: 'warning'
+            });
+          }else {
+            window.location.href = '/';
+          }
+          throw err;
+        });
+      });
+      this.setToken(getToken() ?? null)
 
-#nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
-    }
+    },
+    methods:{
+      ...mapMutations('user',['setToken']),
+    },
   }
-}
+</script>
+<style lang="scss">
+
 </style>
